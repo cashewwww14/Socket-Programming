@@ -1,0 +1,39 @@
+-- VERSION_5
+-- START DISKCACHE_3
+C:\Users\lenov\OneDrive\Documents\Kuliah\SMT 4\ProgJar\Quiz\.metadata\.plugins\org.eclipse.core.resources\.projects\tes\com.python.pydev.analysis\v2_indexcache
+tes|1744716985401356800|C:\Users\lenov\OneDrive\Documents\Kuliah\SMT 4\ProgJar\Quiz\tes\tes.py
+-- END DISKCACHE
+-- START DICTIONARY
+7
+3=ChatClient
+2=tes
+1=C:\Users\lenov\OneDrive\Documents\Kuliah\SMT 4\ProgJar\Quiz\tes\tes.py
+4=TestChatClient.setUp
+5=ChatClient.__init__
+6=TestChatClient
+7=NullWriter
+-- END DICTIONARY
+-- START TREE 1
+5
+ass|1|assert_true!1^67#5*18@
+cha|1|ChatClient!1^9#7*17@
+nul|1|NullWriter!1^63#7*17@
+run|1|runner!1^159#5*19@
+tes|1|TestChatClient!1^74#7*17@
+-- END TREE
+-- START TREE 2
+13
+__i|1|__init__!3&1^10#9*18@
+cha|1|chat_client!4&1^84#9*19@
+cli|1|client_socket!5&1^16#9*19@
+con|1|connect!3&1^21#9*18@
+hos|1|host!5&1^12#9*19@
+loo|1|loop_iteration!3&1^35#9*18@
+mai|1|main_loop!3&1^31#9*18@
+moc|1|mock_socket_instance!4&1^80#9*19@
+nic|1|nickname!5&1^19#9*19@
+por|1|port!5&1^13#9*19@
+set|1|setUp!6&1^77#9*18@
+tes|4|test_default_host_and_port!6&1^99#9*18@test_loop_iteration_receive_message!6&1^111#9*18@test_connect!6&1^86#9*18@test_loop_iteration_send_message!6&1^134#9*18@
+wri|1|write!7&1^64#9*18@
+-- END TREE

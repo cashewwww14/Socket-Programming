@@ -1,0 +1,154 @@
+import socket
+import json
+import zlib
+import datetime
+import sys
+import unittest
+from unittest.mock import patch, MagicMock
+from io import StringIO
+
+class Message:
+    def __init__(self, username, text, timestamp=None):
+        self.username = username
+        self.text = text
+        if timestamp is None:
+            self.timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+        else:
+            self.timestamp = timestamp
+
+    def serialize(self):
+        """Serialize the Message object into a compressed JSON string"""
+        message_dict = {
+            'username': self.username,
+            'text': self.text,
+            'timestamp': self.timestamp
+        }
+        json_string = json.dumps(message_dict)
+        compressed_data = zlib.compress(json_string.encode('utf-8'))
+        return compressed_data
+
+    @staticmethod
+    def deserialize(serialized_message):
+        """Deserialize the compressed JSON string back into a Message object"""
+        decompressed_data = zlib.decompress(serialized_message)
+        json_string = decompressed_data.decode('utf-8')
+        message_dict = json.loads(json_string)
+        return Message(
+            username=message_dict['username'],
+            text=message_dict['text'],
+            timestamp=message_dict['timestamp']
+        )
+
+def create_server(host='localhost', port=8080):
+    """Create a server socket and listen for incoming connections"""
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server_socket.bind((host, port))
+    server_socket.listen(5)
+    return server_socket
+
+def handle_client(client_socket):
+    """Handle individual client connection"""
+    try:
+        data = client_socket.recv(1024)
+        if data:
+            message = Message.deserialize(data)
+            log_message = f"Received message: Username: {message.username}, Text: {message.text}, Timestamp: {message.timestamp}"
+            print(log_message)
+            return log_message
+    except Exception as e:
+        print(f"Error handling client: {e}")
+    finally:
+        client_socket.close()
+
+def serve(host='localhost', port=8080):
+    """Start the server and process incoming requests"""
+    server_socket = create_server(host, port)
+    print(f"Server listening on {host}:{port}")
+    
+    try:
+        while True:
+            client_socket, client_address = server_socket.accept()
+            print(f"Connection from {client_address}")
+            handle_client(client_socket)
+    except KeyboardInterrupt:
+        print("Server shutting down...")
+    finally:
+        server_socket.close()
+
+# A 'null' stream that discards anything written to it
+class NullWriter(StringIO):
+    def write(self, txt):
+        pass
+
+def assert_in(parameter1, parameter2):
+    if parameter1 in parameter2:
+        print(f'test attribute passed: {parameter1} found in log messages')
+    else:
+        print(f'test attribute failed: {parameter1} not found in log messages')
+
+class TestObjectSerializationServer(unittest.TestCase):
+    def test_message_serialization(self):
+        """Test message serialization and deserialization"""
+        print('Testing message serialization and deserialization...')
+        
+        # Create a test message
+        original_message = Message("Alice", "Hello, World!", "2024-01-01 12:00:00.000000")
+        
+        # Serialize the message
+        serialized_data = original_message.serialize()
+        
+        # Deserialize the message
+        deserialized_message = Message.deserialize(serialized_data)
+        
+        # Verify the deserialized message
+        assert deserialized_message.username == original_message.username
+        assert deserialized_message.text == original_message.text
+        assert deserialized_message.timestamp == original_message.timestamp
+        
+        print("Message serialization test passed")
+
+    @patch('socket.socket')
+    def test_server_creation(self, mock_socket):
+        """Test server creation"""
+        print('Testing server creation...')
+        create_server()
+        mock_socket.assert_called_once_with(socket.AF_INET, socket.SOCK_STREAM)
+        instance = mock_socket.return_value
+        instance.setsockopt.assert_called_with(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        instance.bind.assert_called_with(('localhost', 8080))
+        instance.listen.assert_called_once_with(5)
+        print("Server creation test passed")
+
+    @patch('builtins.print')
+    def test_handle_client(self, mock_print):
+        """Test client handling with message processing"""
+        print('Testing client handling...')
+        
+        # Create a test message and serialize it
+        test_message = Message("Alice", "Hello, World!", "2024-01-01 12:00:00.000000")
+        serialized_data = test_message.serialize()
+        
+        # Create mock client socket
+        mock_client_socket = MagicMock()
+        mock_client_socket.recv.return_value = serialized_data
+        
+        # Handle the client
+        log_message = handle_client(mock_client_socket)
+        
+        # Verify the log message contains expected content
+        assert_in("Received message:", log_message)
+        assert_in("Username: Alice", log_message)
+        assert_in("Text: Hello, World!", log_message)
+        
+        # Verify socket was closed
+        mock_client_socket.close.assert_called_once()
+        print("Client handling test passed")
+
+if __name__ == '__main__':
+    if len(sys.argv) == 2 and sys.argv[1] == 'run':
+        serve()
+    else:
+        # Run unit tests
+        runner = unittest.TextTestRunner(stream=NullWriter())
+        unittest.main(testRunner=runner, exit=False)
